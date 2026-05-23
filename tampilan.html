@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPB Menfess DApp</title>
+    <!-- Memanggil Tailwind CSS tanpa perlu install -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f8fafc; font-family: sans-serif; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Navbar -->
+    <nav class="bg-blue-900 text-white p-4 shadow-md">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <h1 class="text-2xl font-bold tracking-wide">IPB Menfess</h1>
+            </div>
+            <button id="btnConnect" onclick="connectWallet()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-medium transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>
+                <span id="walletText">Connect Wallet</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto p-6 mt-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Kolom Kiri: Form Input -->
+        <div class="md:col-span-1">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-blue-900">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" x2="11" y1="2" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    Tulis Menfess
+                </h2>
+                <form id="formMenfess" onsubmit="kirimMenfess(event)" class="flex flex-col gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">NIM</label>
+                        <input type="text" id="inputNim" placeholder="G64..." required class="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Curhatan</label>
+                        <textarea id="inputKonten" rows="4" placeholder="Ada keluhan atau mau confess apa hari ini?" required class="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 resize-none"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-lg font-semibold transition-all mt-2">
+                        Kirim ke Blockchain
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Kolom Kanan: Feed Kicauan -->
+        <div class="md:col-span-2">
+            <h2 class="text-2xl font-bold mb-4 text-slate-800">Timeline Kampus</h2>
+            <div id="feedMenfess" class="flex flex-col gap-4">
+                <!-- Data menfess akan muncul di sini via Javascript -->
+                <div class="bg-white p-8 rounded-2xl border border-slate-100 text-center text-slate-500" id="pesanKosong">
+                    Belum ada kicauan. Jadilah yang pertama!
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Javascript Logic -->
+    <script>
+        let walletAddress = "";
+        let daftarMenfess = [];
+
+        // Fungsi menghubungkan dompet Freighter (Cek eksistensi window.freighterApi)
+        async function connectWallet() {
+            // Mengecek apakah extension Freighter sudah terinstall di browser
+            if (window.freighterApi) {
+                try {
+                    const publicKey = await window.freighterApi.requestAccess();
+                    walletAddress = publicKey;
+                    
+                    // Mengubah teks tombol jadi alamat wallet yang disingkat
+                    const shortenedAddress = `${walletAddress.substring(0, 6)}...${walletAddress.substring(52)}`;
+                    document.getElementById('walletText').innerText = shortenedAddress;
+                    document.getElementById('btnConnect').classList.remove('bg-blue-600');
+                    document.getElementById('btnConnect').classList.add('bg-green-600');
+                } catch (error) {
+                    alert("Gagal koneksi ke wallet.");
+                }
+            } else {
+                alert("Tolong install ekstensi dompet Freighter di browser kamu ya!");
+            }
+        }
+
+        // Fungsi untuk handle submit form
+        function kirimMenfess(event) {
+            event.preventDefault(); // Mencegah halaman refresh
+            
+            if (!walletAddress) {
+                alert("Harap Connect Wallet terlebih dahulu!");
+                return;
+            }
+
+            const nim = document.getElementById('inputNim').value;
+            const konten = document.getElementById('inputKonten').value;
+
+            // Simulasi data dikirim (Nanti bagian ini diganti dengan panggil smart contract)
+            const menfessBaru = {
+                id: Date.now(),
+                nim: nim,
+                konten: konten,
+                waktu: new Date().toLocaleString()
+            };
+
+            // Tambahkan ke daftar paling atas
+            daftarMenfess.unshift(menfessBaru);
+            
+            // Kosongkan form setelah ngirim
+            document.getElementById('inputKonten').value = '';
+            
+            // Render ulang tampilan feed
+            renderFeed();
+            alert("Menfess berhasil dikirim!");
+        }
+
+        // Fungsi untuk mencetak data ke layar HTML
+        function renderFeed() {
+            const feedContainer = document.getElementById('feedMenfess');
+            feedContainer.innerHTML = ''; // Bersihkan kontainer
+
+            if (daftarMenfess.length === 0) {
+                feedContainer.innerHTML = `
+                    <div class="bg-white p-8 rounded-2xl border border-slate-100 text-center text-slate-500">
+                        Belum ada kicauan. Jadilah yang pertama!
+                    </div>`;
+                return;
+            }
+
+            // Looping data menfess dan buat elemen HTML-nya
+            daftarMenfess.forEach(mfs => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-2xl shadow-sm border border-slate-100 relative";
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-bold text-blue-900 bg-blue-50 px-3 py-1 rounded-full text-sm">
+                            ${mfs.nim}
+                        </span>
+                        <span class="text-xs text-slate-400">${mfs.waktu}</span>
+                    </div>
+                    <p class="text-slate-700 whitespace-pre-wrap mt-3">${mfs.konten}</p>
+                    
+                    <button class="absolute bottom-4 right-4 text-slate-300 hover:text-red-500" onclick="hapusMenfess(${mfs.id})">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                    </button>
+                `;
+                feedContainer.appendChild(card);
+            });
+        }
+
+        // Fungsi simulasi hapus menfess
+        function hapusMenfess(id) {
+            if(confirm("Yakin mau menarik menfess ini?")) {
+                daftarMenfess = daftarMenfess.filter(mfs => mfs.id !== id);
+                renderFeed();
+            }
+        }
+    </script>
+</body>
+</html>
